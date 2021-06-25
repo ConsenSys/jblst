@@ -17,7 +17,7 @@ executors:
       GRADLE_OPTS: -Xmx2048m -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=2
   mac_os_executor:
     macos:
-      xcode: "12.4.0"
+      xcode: "12.5.0"
     resource_class: medium
     working_directory: ~/jblst
     environment:
@@ -129,8 +129,13 @@ jobs:
           name: Generate mac os shared lib
           command: |
             cd blst/bindings/java
-            ../../build.sh -D__BLST_PORTABLE__
+            ../../build.sh "-D__BLST_PORTABLE__ -arch x86_64 -arch arm64"
+            ar -x libblst.a
+            rm libblst.a
+            libtool -static -o libblst.a server.o assembly.o
             ./run.me
+            # Not ideal but the swig expects to find the library under an arch specific dir
+            cp -rf supranational/blst/Mac/x86_64 supranational/blst/Mac/arm64
       - persist_to_workspace:
           root: ./
           paths:
